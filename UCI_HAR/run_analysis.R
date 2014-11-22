@@ -1,3 +1,4 @@
+setwd('data')
 
 ## read test data
 X_test <- read.table("test/X_test.txt", header=F)
@@ -22,35 +23,46 @@ df_combine = rbind(df_test, df_train)
 labels = read.table('activity_labels.txt',header=F)
 
 ## replace activity integer with actual name
-## this is really slow
-num_row = nrow(df_combine)
-integers = df_combine[i,2]
-lables = as.character(labels[,2])
-for(i in 1:num_row){
-    index <- integers[i] # get the integer in the second column
-    label <- labels[index] # get the label from the label data set
-    df_combine[i,2] <- label # replace the integer with activity name
-    if(i %% 500 == 0){
-        print(i)
-    } 
-}
+labels = as.character(labels[,2])
+# lapply saves the day
+df_combine[,2] = unlist(lapply(df_combine[,2], function(x) labels[x]))
 
+## this is really slow
+#num_row = nrow(df_combine)
+#for(i in 1:num_row){
+#    index <- integers[i] # get the integer in the second column
+#    label <- labels[index] # get the label from the label data set
+#    df_combine[i,2] <- label # replace the integer with activity name
+#    if(i %% 500 == 0){
+#        print(i)
+#    } 
+#}
+
+## read feature 
 features = read.table("features.txt", header=F)
 
+## get colnames contains mean and std
 index = grep("mean\\(|std\\(", features[,2])
-
 filtered_features = features[index, ]
 
+## remove '()' in names 
 filtered_features = gsub("\\(\\)", "", filtered_features[,2])
 
+## add get column data besed on the index before
 df_filtered = df_combine[, index+2]
+
+## add first and second column back
 df_filtered = cbind(df_combine[,c(1,2)], df_filtered)
+
+## label varible names
 colnames(df_filtered) = c(c('subject','activity'),filtered_features)
 
 #write.table(df_filtered,file="df_filtered.txt",row.names=F)
 
+##
+library(plyr)
 dim_col = length(colnames(df_filtered))
-df_tide = ddply(df_filtered, .(subject,activity), function(df) colMean(df[,3:dim_col]))
+df_tide = ddply(df_filtered, .(subject,activity), function(df) colMeans(df[,3:dim_col]))
 write.table(df_tide,file="df_tide.txt",row.names=F)
 
 
