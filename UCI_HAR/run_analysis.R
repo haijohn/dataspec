@@ -48,7 +48,7 @@ filtered_features = features[index, ]
 ## remove '()' in names 
 filtered_features = gsub("\\(\\)", "", filtered_features[,2])
 
-## add get column data besed on the index before
+## get column data based on the index before
 df_filtered = df_combine[, index+2]
 
 ## add first and second column back
@@ -59,7 +59,7 @@ colnames(df_filtered) = c(c('subject','activity'),filtered_features)
 
 #write.table(df_filtered,file="df_filtered.txt",row.names=F)
 
-##
+## caculate avg of each varible for each activity and each subject use ddply
 library(plyr)
 dim_col = length(colnames(df_filtered))
 df_tide = ddply(df_filtered, .(subject,activity), function(df) colMeans(df[,3:dim_col]))
